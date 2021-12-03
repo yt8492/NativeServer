@@ -1,10 +1,10 @@
 package com.yt8492.nativeserver.socket
 
 import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.UIntVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.allocPointerTo
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
@@ -43,7 +43,7 @@ class ServerSocket(
         hints.ai_family = AF_INET
         hints.ai_socktype = SOCK_STREAM
         hints.ai_flags = AI_PASSIVE
-        val res = alloc<CPointerVar<addrinfo>>()
+        val res = allocPointerTo<addrinfo>()
         eCode = getaddrinfo(null, port.toString(), hints.ptr, res.ptr)
         if (eCode != 0) {
             throw SocketException("getaddrinfo failed. error $eCode")
@@ -62,12 +62,12 @@ class ServerSocket(
         }
         eCode = bind(sock, res.pointed?.ai_addr, res.pointed?.ai_addrlen ?: 0u)
         if (eCode < 0) {
-            platform.posix.close(sock)
+            cClose(sock)
             throw SocketException("bind failed. error $eCode")
         }
         eCode = listen(sock, SOMAXCONN)
         if (eCode < 0) {
-            platform.posix.close(sock)
+            cClose(sock)
             throw SocketException("listen failed. error $eCode")
         }
         sock
