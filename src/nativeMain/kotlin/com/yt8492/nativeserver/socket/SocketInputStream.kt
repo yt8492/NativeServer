@@ -1,5 +1,6 @@
 package com.yt8492.nativeserver.socket
 
+import com.yt8492.nativeserver.stream.InputStream
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.get
@@ -9,8 +10,8 @@ import platform.posix.recv
 
 class SocketInputStream(
     private val socketDescriptor: Int,
-) {
-    fun read(buffer: ByteArray, length: Int): Int {
+) : InputStream {
+    override fun read(buffer: ByteArray, length: Int): Int {
         if (length <= 0) {
             return 0
         }

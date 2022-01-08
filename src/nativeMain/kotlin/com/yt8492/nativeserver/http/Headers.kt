@@ -1,0 +1,38 @@
+package com.yt8492.nativeserver.http
+
+class Headers : Iterable<Header> {
+    private val headers = mutableSetOf<Header>()
+
+    operator fun get(name: String): String? {
+        return headers.firstOrNull {
+            it.name.equals(name, ignoreCase = true)
+        }?.value
+    }
+
+    fun getAll(name: String): List<String> {
+        return headers.asSequence()
+            .filter { it.name.equals(name, ignoreCase = true) }
+            .map { it.value }
+            .toList()
+    }
+
+    fun add(name: String, value: String) {
+        headers.add(Header(name, value))
+    }
+
+    fun add(name: String, values: List<String>) {
+        headers.addAll(values.map { Header(name, it) })
+    }
+
+    override fun iterator(): Iterator<Header> {
+        return headers.iterator()
+    }
+
+    override fun toString(): String {
+        return headers.toString()
+    }
+
+    override fun hashCode(): Int {
+        return headers.hashCode()
+    }
+}
