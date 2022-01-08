@@ -12,6 +12,10 @@ sealed class Method(val rawValue: String) {
     object CONNECT : Method("CONNECT")
     class EXTENSION(value: String) : Method(value)
 
+    override fun toString(): String {
+        return rawValue
+    }
+
     companion object {
         fun from(rawValue: String): Method {
             return when (rawValue) {
