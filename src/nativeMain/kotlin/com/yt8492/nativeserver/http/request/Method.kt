@@ -11,4 +11,21 @@ sealed class Method(val rawValue: String) {
     object TRACE : Method("TRACE")
     object CONNECT : Method("CONNECT")
     class EXTENSION(value: String) : Method(value)
+
+    companion object {
+        fun from(rawValue: String): Method {
+            return when (rawValue) {
+                OPTIONS.rawValue -> OPTIONS
+                GET.rawValue -> GET
+                HEAD.rawValue -> HEAD
+                POST.rawValue -> POST
+                PUT.rawValue -> PUT
+                PATCH.rawValue -> PATCH
+                DELETE.rawValue -> DELETE
+                TRACE.rawValue -> TRACE
+                CONNECT.rawValue -> TRACE
+                else -> EXTENSION(rawValue)
+            }
+        }
+    }
 }
