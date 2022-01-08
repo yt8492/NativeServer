@@ -21,4 +21,15 @@ class SocketOutputStream(
             return len
         }
     }
+
+    override fun write(text: String): Int {
+        val buffer = text.encodeToByteArray()
+        buffer.usePinned { pinned ->
+            val len = send(socketDescriptor, pinned.addressOf(0), buffer.size.toULong(), 0).toInt()
+            if (len < 0) {
+                throw SocketException("errno: $errno")
+            }
+            return len
+        }
+    }
 }
