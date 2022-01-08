@@ -1,12 +1,12 @@
 package com.yt8492.nativeserver.http.request
 
-import com.yt8492.nativeserver.http.Header
+import com.yt8492.nativeserver.http.Headers
 import com.yt8492.nativeserver.socket.SocketInputStream
 import kotlinx.cinterop.toKString
 
 class Request(
     val requestLine: RequestLine,
-    val headers: List<Header>,
+    val headers: Headers,
     val body: ByteArray,
 ) {
     companion object {
@@ -15,7 +15,12 @@ class Request(
         fun from(inputStream: SocketInputStream): Request {
             val requestLine = readRequestLine(inputStream)
             val headers = readHeaders(inputStream)
-            val body = readBody(inputStream)
+            val contentLength = headers["Content-Length"]?.toIntOrNull()
+            val body = if (contentLength != null) {
+                readBody(inputStream, contentLength)
+            } else {
+                readBody(inputStream)
+            }
             return Request(
                 requestLine = requestLine,
                 headers = headers,
@@ -40,18 +45,26 @@ class Request(
 
         private fun readHeaders(
             inputStream: SocketInputStream,
-        ): List<Header> {
-            val headers = mutableListOf<Header>()
+        ): Headers {
+            val headers = Headers()
             var line = readUntilCRLF(inputStream)
             while (line != "") {
                 val (name, value) = line.split(":").map {
                     it.trim()
                 }
-                val header = Header(name, value)
-                headers.add(header)
+                headers.add(name, value)
                 line = readUntilCRLF(inputStream)
             }
             return headers
+        }
+
+        private fun readBody(
+            inputStream: SocketInputStream,
+            contentLength: Int,
+        ): ByteArray {
+            val body = ByteArray(contentLength)
+            inputStream.read(body, contentLength)
+            return body
         }
 
         private fun readBody(
@@ -103,10 +116,11 @@ class Request(
             var body = ByteArray(0)
             var len = inputStream.read(buf, buf.size)
             while (len != 0) {
-                body += if (len == MAX_BUF_SIZE) {
-                    buf
+                if (len == MAX_BUF_SIZE) {
+                    body += buf
                 } else {
-                    buf.copyOf(len)
+                    body += buf.copyOf(len)
+                    break
                 }
                 len = inputStream.read(buf, buf.size)
             }

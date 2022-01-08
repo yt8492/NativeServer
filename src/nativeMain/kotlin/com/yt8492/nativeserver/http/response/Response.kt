@@ -1,11 +1,11 @@
 package com.yt8492.nativeserver.http.response
 
-import com.yt8492.nativeserver.http.Header
+import com.yt8492.nativeserver.http.Headers
 import com.yt8492.nativeserver.socket.SocketOutputStream
 
 class Response(
     val statusLine: StatusLine,
-    val headers: List<Header>,
+    val headers: Headers,
     val body: ByteArray,
 ) {
     fun writeTo(
