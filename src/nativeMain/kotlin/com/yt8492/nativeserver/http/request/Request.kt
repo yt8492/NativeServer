@@ -16,10 +16,18 @@ class Request(
             val requestLine = readRequestLine(inputStream)
             val headers = readHeaders(inputStream)
             val contentLength = headers["Content-Length"]?.toIntOrNull()
-            val body = if (contentLength != null) {
-                readBody(inputStream, contentLength)
-            } else {
-                readBody(inputStream)
+            val transferEncoding = headers["Transfer-Encoding"]
+            val body = when {
+                contentLength != null -> {
+                    readBody(inputStream, contentLength)
+                }
+                transferEncoding != null -> {
+                    // TODO: ちゃんと対応する
+                    readBody(inputStream)
+                }
+                else -> {
+                    ByteArray(0)
+                }
             }
             return Request(
                 requestLine = requestLine,
