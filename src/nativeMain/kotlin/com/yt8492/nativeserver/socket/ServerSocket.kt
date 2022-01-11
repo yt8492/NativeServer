@@ -20,6 +20,7 @@ import platform.posix.NI_NUMERICHOST
 import platform.posix.NI_NUMERICSERV
 import platform.posix.SOCK_STREAM
 import platform.posix.SOMAXCONN
+import platform.posix.accept
 import platform.posix.addrinfo
 import platform.posix.bind
 import platform.posix.freeaddrinfo
@@ -80,7 +81,7 @@ class ServerSocket(
             val fromSockAddr = alloc<sockaddr_storage>()
             val addrLen = alloc<UIntVar>()
             addrLen.value = sizeOf<sockaddr_storage>().toUInt()
-            val acceptSocket = platform.posix.accept(
+            val acceptSocket = accept(
                 socketDescriptor,
                 fromSockAddr.reinterpret<sockaddr>().ptr,
                 addrLen.ptr,
