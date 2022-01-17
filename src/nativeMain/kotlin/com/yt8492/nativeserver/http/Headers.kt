@@ -27,12 +27,4 @@ class Headers : Iterable<Header> {
     override fun iterator(): Iterator<Header> {
         return headers.iterator()
     }
-
-    override fun toString(): String {
-        return headers.toString()
-    }
-
-    override fun hashCode(): Int {
-        return headers.hashCode()
-    }
 }
