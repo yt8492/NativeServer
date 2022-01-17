@@ -1,7 +1,7 @@
 package com.yt8492.nativeserver.http
 
 class Headers : Iterable<Header> {
-    private val headers = mutableSetOf<Header>()
+    private val headers = mutableListOf<Header>()
 
     operator fun get(name: String): String? {
         return headers.firstOrNull {
