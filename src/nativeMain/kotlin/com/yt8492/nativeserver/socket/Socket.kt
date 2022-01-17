@@ -1,6 +1,6 @@
 package com.yt8492.nativeserver.socket
 
-import platform.posix.close as cClose
+import platform.posix.close
 
 class Socket(
     private val host: String,
@@ -16,6 +16,6 @@ class Socket(
     }
 
     fun close() {
-        cClose(socketDescriptor)
+        close(socketDescriptor)
     }
 }

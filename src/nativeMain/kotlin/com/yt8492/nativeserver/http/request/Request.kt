@@ -15,15 +15,15 @@ class Request(
         fun from(inputStream: SocketInputStream): Request {
             val requestLine = readRequestLine(inputStream)
             val headers = readHeaders(inputStream)
-            val contentLength = headers["Content-Length"]?.toIntOrNull()
             val transferEncoding = headers["Transfer-Encoding"]
+            val contentLength = headers["Content-Length"]?.toIntOrNull()
             val body = when {
-                contentLength != null -> {
-                    readBody(inputStream, contentLength)
-                }
                 transferEncoding != null -> {
                     // TODO: ちゃんと対応する
-                    readBody(inputStream)
+                    throw IllegalHttpRequestException()
+                }
+                contentLength != null -> {
+                    readBody(inputStream, contentLength)
                 }
                 else -> {
                     ByteArray(0)
@@ -39,11 +39,9 @@ class Request(
         private fun readRequestLine(
             inputStream: SocketInputStream,
         ): RequestLine {
-            val rawMethod = readUntilSpace(inputStream)
+            val requestLine = readUntilCRLF(inputStream)
+            val (rawMethod, uri, httpVersion) = requestLine.split(" ")
             val method = Method.from(rawMethod)
-            val uri = readUntilSpace(inputStream)
-            val httpVersion = readUntilCRLF(inputStream)
-
             return RequestLine(
                 method = method,
                 uri = uri,
@@ -56,7 +54,7 @@ class Request(
         ): Headers {
             val headers = Headers()
             var line = readUntilCRLF(inputStream)
-            while (line != "") {
+            while (line.isNotEmpty()) {
                 val (name, value) = line.split(":").map {
                     it.trim()
                 }
@@ -79,22 +77,6 @@ class Request(
             inputStream: SocketInputStream,
         ): ByteArray {
             return readAllBytes(inputStream)
-        }
-
-        private fun readUntilSpace(
-            inputStream: SocketInputStream,
-        ): String {
-            val stringBuffer = StringBuilder()
-            while (true) {
-                val buf = ByteArray(1)
-                inputStream.read(buf, buf.size)
-                val temp = buf.toKString()
-                if (temp == " ") {
-                    break
-                }
-                stringBuffer.append(temp)
-            }
-            return stringBuffer.toString()
         }
 
         private fun readUntilCRLF(
