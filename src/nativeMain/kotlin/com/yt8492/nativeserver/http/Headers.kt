@@ -27,4 +27,14 @@ class Headers : Iterable<Header> {
     override fun iterator(): Iterator<Header> {
         return headers.iterator()
     }
+
+    override fun toString(): String {
+        return headers.joinToString(
+            separator = ", ",
+            prefix = "[",
+            postfix = "]",
+        ) {
+            "${it.name}: ${it.value}"
+        }
+    }
 }
