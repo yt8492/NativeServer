@@ -8,7 +8,6 @@ import com.yt8492.nativeserver.socket.ServerSocket
 import com.yt8492.nativeserver.socket.SocketException
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.staticCFunction
-import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import platform.posix.SIGINT
 import platform.posix.STDOUT_FILENO
@@ -26,18 +25,19 @@ fun main() {
             val socket = serverSocket?.accept() ?: return
             val request = Request.from(socket.inputStream)
             val body = """
-            uri: ${request.requestLine.uri}
-            method: ${request.requestLine.method}
-            headers: ${request.headers}
-            body: ${request.body.toKString()}
-        """.trimIndent()
+                path: ${request.path}
+                queries: ${request.queryParameters.joinToString { "${it.name}: ${it.value}" }}
+            """.trimIndent()
+            val headers = Headers().apply {
+                add("Content-Type", "text/html; charset=utf-8")
+            }
             val response = Response(
                 statusLine = StatusLine(
                     httpVersion = "HTTP/1.1",
                     statusCode = 200,
                     reasonPhrase = "OK",
                 ),
-                headers = Headers(),
+                headers = headers,
                 body = body.encodeToByteArray(),
             )
             response.writeTo(socket.outputStream)
