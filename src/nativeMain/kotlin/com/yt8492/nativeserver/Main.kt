@@ -28,7 +28,7 @@ fun main() {
             val body = """
             uri: ${request.requestLine.uri}
             method: ${request.requestLine.method}
-            headers: [${request.headers.joinToString { "${it.name}: ${it.value}" }}]
+            headers: ${request.headers}
             body: ${request.body.toKString()}
         """.trimIndent()
             val response = Response(
