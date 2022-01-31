@@ -14,7 +14,9 @@ class Request(
 
     init {
         requestLine.uri.split("?").let {
-            path = it[0]
+            path = it[0].takeIf { path ->
+                path.isNotEmpty()
+            } ?: "/"
             val rawQueryParameters = it.getOrElse(1) { "" }
             queryParameters = QueryParameters(rawQueryParameters)
         }
