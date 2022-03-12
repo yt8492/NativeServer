@@ -9,6 +9,19 @@ class Request(
     val headers: Headers,
     val body: ByteArray,
 ) {
+    val path: String
+    val queryParameters: QueryParameters
+
+    init {
+        requestLine.uri.split("?").let {
+            path = it[0].takeIf { path ->
+                path.isNotEmpty()
+            } ?: "/"
+            val rawQueryParameters = it.getOrElse(1) { "" }
+            queryParameters = QueryParameters(rawQueryParameters)
+        }
+    }
+
     companion object {
         private const val MAX_BUF_SIZE = 1024 * 64
 

@@ -1,57 +1,37 @@
 package com.yt8492.nativeserver
 
 import com.yt8492.nativeserver.http.Headers
-import com.yt8492.nativeserver.http.request.Request
-import com.yt8492.nativeserver.http.response.Response
-import com.yt8492.nativeserver.http.response.StatusLine
-import com.yt8492.nativeserver.socket.ServerSocket
-import com.yt8492.nativeserver.socket.SocketException
+import com.yt8492.nativeserver.http.Server
+import com.yt8492.nativeserver.http.response.ServerResponse
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.staticCFunction
-import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import platform.posix.SIGINT
 import platform.posix.STDOUT_FILENO
 import platform.posix.signal
 import platform.posix.write
 
-var serverSocket: ServerSocket? = null
+var server: Server? = null
 
 fun main() {
     shutdownHook()
-    try {
-        serverSocket = ServerSocket(8080)
-        println("server start")
-        while (true) {
-            val socket = serverSocket?.accept() ?: return
-            val request = Request.from(socket.inputStream)
-            val body = """
-            uri: ${request.requestLine.uri}
-            method: ${request.requestLine.method}
-            headers: [${request.headers.joinToString { "${it.name}: ${it.value}" }}]
-            body: ${request.body.toKString()}
-        """.trimIndent()
-            val response = Response(
-                statusLine = StatusLine(
-                    httpVersion = "HTTP/1.1",
-                    statusCode = 200,
-                    reasonPhrase = "OK",
-                ),
-                headers = Headers(),
-                body = body.encodeToByteArray(),
-            )
-            response.writeTo(socket.outputStream)
-            socket.close()
-        }
-    } catch (e: SocketException) {
-        println("socket closed")
-        return
+    server = Server()
+    val server = server ?: return
+    server.get("/hoge/:fuga") { request ->
+        val fuga = request.pathParameters.require("fuga")
+        val body = """{"message": "fuga: $fuga"}""".encodeToByteArray()
+        return@get ServerResponse(
+            statusCode = 200,
+            reasonPhrase = "OK",
+            body = body,
+        )
     }
+    server.listen(8080)
 }
 
 fun shutdownHook() {
     signal(SIGINT, staticCFunction<Int, Unit> {
-        serverSocket?.close()
+        server?.close()
         "server stop\n".usePinned { pinned ->
             write(STDOUT_FILENO, pinned.addressOf(0), 24)
         }
