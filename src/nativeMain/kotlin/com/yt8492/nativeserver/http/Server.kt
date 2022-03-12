@@ -2,13 +2,14 @@ package com.yt8492.nativeserver.http
 
 import com.yt8492.nativeserver.http.request.Method
 import com.yt8492.nativeserver.http.request.Request
+import com.yt8492.nativeserver.http.request.ServerRequest
 import com.yt8492.nativeserver.http.response.Response
 import com.yt8492.nativeserver.http.response.StatusLine
 import com.yt8492.nativeserver.socket.ServerSocket
 import com.yt8492.nativeserver.socket.SocketException
 
 class Server {
-    private val handlers = mutableListOf<Handler>()
+    var serverSocket: ServerSocket? = null
     private var defaultResponse = Response(
         statusLine = StatusLine(
             httpVersion = "HTTP/1.1",
@@ -18,7 +19,17 @@ class Server {
         headers = Headers(),
         body = byteArrayOf()
     )
-    var serverSocket: ServerSocket? = null
+
+    private val handlers = mutableListOf<Handler>()
+
+    fun handle(path: String, method: Method, handleFunc: HandleFunc) {
+        val newHandler = Handler(
+            RoutingPath.parse(path),
+            method,
+            handleFunc
+        )
+        handlers.add(newHandler)
+    }
 
     fun get(path: String, handleFunc: HandleFunc) {
         handle(path, Method.GET, handleFunc)
@@ -56,15 +67,6 @@ class Server {
         handle(path, Method.PATCH, handleFunc)
     }
 
-    fun handle(path: String, method: Method, handleFunc: HandleFunc) {
-        val newHandler = Handler(
-            RoutingPath.parse(path),
-            method,
-            handleFunc
-        )
-        handlers.add(newHandler)
-    }
-
     fun listen(port: Int) {
         serverSocket?.let {
             throw ServerAlreadyStartException("server already start on port ${it.port}")
@@ -91,8 +93,9 @@ class Server {
                 if (handler == null) {
                     defaultResponse.writeTo(socket.outputStream)
                 } else {
-                    val response = handler.handleFunc(request)
-                    response.writeTo(socket.outputStream)
+                    val serverRequest = ServerRequest(request, evaluateResult.parameters)
+                    val response = handler.handleFunc(serverRequest)
+                    response.toHttpResponse().writeTo(socket.outputStream)
                 }
                 socket.close()
             }

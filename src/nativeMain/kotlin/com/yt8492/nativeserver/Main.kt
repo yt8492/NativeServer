@@ -2,8 +2,7 @@ package com.yt8492.nativeserver
 
 import com.yt8492.nativeserver.http.Headers
 import com.yt8492.nativeserver.http.Server
-import com.yt8492.nativeserver.http.response.Response
-import com.yt8492.nativeserver.http.response.StatusLine
+import com.yt8492.nativeserver.http.response.ServerResponse
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.usePinned
@@ -18,17 +17,12 @@ fun main() {
     shutdownHook()
     server = Server()
     val server = server ?: return
-    server.get("/") { request ->
-        val body = """{"message": "This is root."}""".encodeToByteArray()
-        val headers = Headers()
-        headers.add("Content-Length", body.size.toString())
-        return@get Response(
-            statusLine = StatusLine(
-                httpVersion = "HTTP/1.1",
-                statusCode = 200,
-                reasonPhrase = "OK",
-            ),
-            headers = headers,
+    server.get("/hoge/:fuga") { request ->
+        val fuga = request.pathParameters.require("fuga")
+        val body = """{"message": "fuga: $fuga"}""".encodeToByteArray()
+        return@get ServerResponse(
+            statusCode = 200,
+            reasonPhrase = "OK",
             body = body,
         )
     }

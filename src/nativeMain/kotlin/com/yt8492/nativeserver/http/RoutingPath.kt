@@ -1,5 +1,7 @@
 package com.yt8492.nativeserver.http
 
+import com.yt8492.nativeserver.http.request.PathParameters
+
 class RoutingPath(
     private val parts: List<RoutingPathSegment>,
 ) {
@@ -28,10 +30,11 @@ class RoutingPath(
                 }
             }
         }
+        val pathParameters = PathParameters(parameters)
         return PathEvaluationResult(
             true,
             quality,
-            parameters,
+            pathParameters,
         )
     }
 
@@ -70,7 +73,7 @@ sealed interface RoutingPathSegment {
 data class PathEvaluationResult(
     val succeeded: Boolean,
     val quality: Double,
-    val parameters: Map<String, String>
+    val parameters: PathParameters,
 ) {
     companion object {
         const val QUALITY_CONSTANT = 1.0
@@ -82,7 +85,7 @@ data class PathEvaluationResult(
             return PathEvaluationResult(
                 succeeded = false,
                 quality = QUALITY_FAILED,
-                mapOf(),
+                PathParameters(emptyMap()),
             )
         }
     }
